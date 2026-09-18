@@ -101,7 +101,13 @@ function useAIChat(sessionId: string) {
     sendMessage,
     status,
     error,
-  } = useChat({ id: sessionId, messages: initialMessages, transport });
+  } = useChat({
+    id: sessionId,
+    messages: initialMessages,
+    transport,
+    // 流式期间 10fps 刷新，排版重算的开销可控
+    experimental_throttle: 100,
+  });
 
   const isStreaming = status === "streaming";
 

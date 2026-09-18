@@ -37,13 +37,15 @@ export function ChatMarkdown({ children }: { children: string }) {
 
   // Only overrides — defaults from utils.ts are merged automatically
   const markdownStyles = {
-    heading1: { fontSize: 24, color: text },
-    heading2: { fontSize: 20, lineHeight: 28, fontWeight: "bold" as const, color: text },
-    heading3: { fontSize: 18, color: text },
-    heading4: { fontSize: 16, color: text },
+    heading1: { fontSize: 24, color: text, marginTop: 16, marginBottom: 8 },
+    heading2: { fontSize: 20, lineHeight: 28, fontWeight: "bold" as const, color: text, marginTop: 14, marginBottom: 6 },
+    heading3: { fontSize: 18, color: text, marginTop: 12, marginBottom: 4 },
+    heading4: { fontSize: 16, color: text, marginTop: 10, marginBottom: 4 },
     heading5: { fontSize: 14, color: text },
     heading6: { fontSize: 12, color: text },
     paragraph: { fontSize: baseFontSize, lineHeight: baseLineHeight, marginVertical: 6 },
+    list: { marginVertical: 6 },
+    listItem: { marginVertical: 3 },
     text: { color: text, fontSize: baseFontSize, lineHeight: baseLineHeight },
     thematicBreak: { backgroundColor: border },
     blockquote: { backgroundColor: bg3, borderColor: border, paddingHorizontal: 8 },
@@ -87,6 +89,22 @@ export function ChatMarkdown({ children }: { children: string }) {
         }
       }}
       renderRules={{
+        // 段落可选中（长按复制），列表项内不加额外间距
+        paragraph: ({ node, styles, children, parentStack }) => {
+          const inListItem = parentStack.some((p) => p.type === "listItem");
+          return (
+            <Text
+              key={node.key}
+              selectable
+              style={[
+                styles.paragraph as any,
+                inListItem && { marginVertical: 0 },
+              ]}
+            >
+              {children}
+            </Text>
+          );
+        },
         // 引用角标：正文里的 [1]、[2] 渲染为蓝色小角标（DeepSeek 风格）
         text: ({ node, styles }) => {
           const value: string = node.value ?? "";

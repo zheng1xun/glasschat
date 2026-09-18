@@ -1,4 +1,5 @@
 import transform, { type StyleTuple } from "css-to-react-native";
+import * as Clipboard from "expo-clipboard";
 import React, {
   memo,
   useCallback,
@@ -8,6 +9,7 @@ import React, {
 } from "react";
 import {
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -78,6 +80,57 @@ const lightStylesheet = getRNStylesFromHljsStyle(githubGist as ReactStyle);
 interface CodeBlockProps {
   code: string;
   language?: string;
+}
+
+/** 代码块头部：语言名 + 一键复制 */
+function CodeHeader({
+  language,
+  code,
+  isDark,
+}: {
+  language?: string;
+  code: string;
+  isDark: boolean;
+}) {
+  const [copied, setCopied] = React.useState(false);
+
+  return (
+    <View
+      style={[
+        styles.header,
+        {
+          backgroundColor: isDark ? "#2a2a2a" : "#eaecef",
+          borderBottomColor: isDark ? "#333" : "#ddd",
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.headerLabel,
+          { color: isDark ? "#999" : "#666" },
+        ]}
+      >
+        {language || "code"}
+      </Text>
+      <Pressable
+        hitSlop={8}
+        onPress={async () => {
+          await Clipboard.setStringAsync(code);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        }}
+      >
+        <Text
+          style={[
+            styles.headerCopy,
+            { color: copied ? "#22c55e" : isDark ? "#999" : "#666" },
+          ]}
+        >
+          {copied ? "✓ 已复制" : "复制"}
+        </Text>
+      </Pressable>
+    </View>
+  );
 }
 
 export const CodeBlock = memo(function CodeBlock({
@@ -162,6 +215,7 @@ export const CodeBlock = memo(function CodeBlock({
 
   return (
     <View style={containerStyle}>
+      <CodeHeader language={language} code={code} isDark={isDark} />
       <SyntaxHighlighter
         renderer={renderer}
         CodeTag={View as any}
@@ -178,9 +232,24 @@ export const CodeBlock = memo(function CodeBlock({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 8,
-    marginVertical: 4,
+    borderRadius: 12,
+    marginVertical: 6,
     overflow: "hidden",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  headerLabel: {
+    fontSize: 12,
+    fontFamily: Platform.select({ ios: "Menlo", default: "monospace" }),
+  },
+  headerCopy: {
+    fontSize: 12,
   },
   scrollContent: {
     minWidth: "100%",
@@ -191,6 +260,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 14,
     lineHeight: 20,
-    fontFamily: Platform.select({ ios: "monospace-ui", default: "monospace" }),
+    fontFamily: Platform.select({ ios: "Menlo", default: "monospace" }),
   },
 });
