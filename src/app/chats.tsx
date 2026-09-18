@@ -1,80 +1,124 @@
 import { useDrawer } from "@/components/drawer-content";
 import { Icon } from "@/components/icon";
 import { Image } from "@/components/tw";
-import { MOCK_CHATS, type MockChat } from "@/utils/mock-chats";
+import {
+  createSession,
+  deleteSession,
+  getSessions,
+  groupSessionsByDate,
+  renameSession,
+  setCurrentSession,
+  sortedSessions,
+  subscribeChatSessions,
+  togglePinSession,
+  type ChatSession,
+} from "@/lib/chat-sessions";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
-import { Color, Link, Stack, useRouter } from "expo-router";
+import { Color, Stack, useRouter } from "expo-router";
 import { ChevronRight, Menu, Search } from "lucide-react-native";
-import { useCallback, useMemo, useState } from "react";
-import { Alert, FlatList, Pressable, Text, View } from "react-native";
+import { useMemo, useState, useSyncExternalStore } from "react";
+import {
+  Alert,
+  Pressable,
+  SectionList,
+  Text,
+  View,
+} from "react-native";
 
-type Filter = "all" | "starred";
-
-function formatTimeAgo(daysAgo: number): string {
-  if (daysAgo < 7) return `${daysAgo} 天前`;
-  const weeks = Math.round(daysAgo / 7);
-  return `${weeks} 周前`;
+function formatTime(updatedAt: number): string {
+  const days = Math.floor((Date.now() - updatedAt) / 86400000);
+  if (days < 1) {
+    return new Date(updatedAt).toLocaleTimeString("zh-CN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  if (days === 1) return "昨天";
+  if (days < 7) return `${days} 天前`;
+  return `${Math.round(days / 7)} 周前`;
 }
 
-type Chat = MockChat;
-
-function ChatRow({
-  item,
-  onRename,
-  onDelete,
-  onStar,
-}: {
-  item: Chat;
-  onRename: () => void;
-  onDelete: () => void;
-  onStar: () => void;
-}) {
+function ChatRow({ item }: { item: ChatSession }) {
+  const router = useRouter();
   return (
-    <Link href="/" asChild>
-      <Link.Trigger>
-        <Pressable className="flex-row items-center px-5 py-4 active:bg-card">
-          <View className="flex-1 gap-0.5 mr-3">
-            <Text
-              numberOfLines={1}
-              className="text-[17px] text-foreground"
-              selectable
-            >
-              {item.title}
-            </Text>
-            <Text className="text-[13px] text-muted-foreground">
-              {formatTimeAgo(item.daysAgo)}
-            </Text>
-          </View>
-          {process.env.EXPO_OS === "ios" ? (
-            <Image
-              source="sf:chevron.right"
-              className="w-2.5 h-4 font-medium text-muted-foreground"
-            />
-          ) : (
-            <Icon
-              icon={ChevronRight}
-              className="w-2.5 h-4 text-muted-foreground"
-            />
-          )}
-        </Pressable>
-      </Link.Trigger>
-
-      <Link.Menu>
-        <Link.MenuAction
-          title={item.starred ? "取消收藏" : "收藏"}
-          icon={item.starred ? "star.fill" : "star"}
-          onPress={onStar}
+    <Pressable
+      className="flex-row items-center px-5 py-4 active:bg-card"
+      onPress={() => {
+        setCurrentSession(item.id);
+        router.replace("/", { withAnchor: true });
+      }}
+      onLongPress={() => showActions(item)}
+      delayLongPress={400}
+    >
+      <View className="flex-1 gap-0.5 mr-3">
+        <View className="flex-row items-center gap-1.5">
+          {item.pinned && <Text className="text-[11px]">📌</Text>}
+          <Text
+            numberOfLines={1}
+            className="text-[17px] text-foreground flex-1"
+            selectable
+          >
+            {item.title}
+          </Text>
+        </View>
+        <Text className="text-[13px] text-muted-foreground">
+          {formatTime(item.updatedAt)}
+        </Text>
+      </View>
+      {process.env.EXPO_OS === "ios" ? (
+        <Image
+          source="sf:chevron.right"
+          className="w-2.5 h-4 font-medium text-muted-foreground"
         />
-        <Link.MenuAction title="重命名" icon="pencil" onPress={onRename} />
-        <Link.MenuAction
-          title="删除"
-          icon="trash"
-          destructive
-          onPress={onDelete}
-        />
-      </Link.Menu>
-    </Link>
+      ) : (
+        <Icon icon={ChevronRight} className="w-2.5 h-4 text-muted-foreground" />
+      )}
+    </Pressable>
   );
+}
+
+function showActions(chat: ChatSession) {
+  Alert.alert(chat.title, undefined, [
+    {
+      text: chat.pinned ? "取消置顶" : "置顶",
+      onPress: () => togglePinSession(chat.id),
+    },
+    {
+      text: "重命名",
+      onPress: () => {
+        Alert.prompt(
+          "重命名对话",
+          undefined,
+          [
+            { text: "取消", style: "cancel" },
+            {
+              text: "好",
+              onPress: (value?: string) => {
+                if (value?.trim()) renameSession(chat.id, value);
+              },
+            },
+          ],
+          "plain-text",
+          chat.title,
+        );
+      },
+    },
+    {
+      text: "删除",
+      style: "destructive",
+      onPress: () => {
+        Alert.alert("删除对话", `确定删除「${chat.title}」吗？`, [
+          { text: "取消", style: "cancel" },
+          {
+            text: "删除",
+            style: "destructive",
+            onPress: () => deleteSession(chat.id),
+          },
+        ]);
+      },
+    },
+    { text: "取消", style: "cancel" },
+  ]);
 }
 
 function EmptySearch({ query }: { query: string }) {
@@ -90,94 +134,61 @@ function EmptySearch({ query }: { query: string }) {
 
 export default function ChatsScreen() {
   const [search, setSearch] = useState("");
-  const [chats, setChats] = useState(MOCK_CHATS);
-  const [filter, setFilter] = useState<Filter>("all");
+  const allSessions = useSyncExternalStore(subscribeChatSessions, getSessions);
 
-  const filtered = useMemo(() => {
-    let results = chats;
-    if (filter === "starred") {
-      results = results.filter((c) => c.starred);
-    }
+  const sections = useMemo(() => {
+    let list = sortedSessions();
     if (search) {
       const q = search.toLowerCase();
-      results = results.filter((c) => c.title.toLowerCase().includes(q));
+      list = list.filter(
+        (c) =>
+          c.title.toLowerCase().includes(q) ||
+          c.messages.some((m) =>
+            m.parts.some((p) => p.text?.toLowerCase().includes(q)),
+          ),
+      );
     }
-    return results;
-  }, [search, chats, filter]);
-
-  const handleRename = useCallback((chat: Chat) => {
-    Alert.prompt(
-      "重命名对话",
-      undefined,
-      [
-        { text: "取消", style: "cancel" },
-        {
-          text: "好",
-          onPress: (newTitle?: string) => {
-            if (newTitle?.trim()) {
-              setChats((prev) =>
-                prev.map((c) =>
-                  c.id === chat.id ? { ...c, title: newTitle.trim() } : c,
-                ),
-              );
-            }
-          },
-        },
-      ],
-      "plain-text",
-      chat.title,
-    );
-  }, []);
-
-  const handleDelete = useCallback((chat: Chat) => {
-    Alert.alert("删除对话", `确定删除「${chat.title}」吗？`, [
-      { text: "取消", style: "cancel" },
-      {
-        text: "删除",
-        style: "destructive",
-        onPress: () => {
-          setChats((prev) => prev.filter((c) => c.id !== chat.id));
-        },
-      },
-    ]);
-  }, []);
-
-  const handleStar = useCallback((chat: Chat) => {
-    setChats((prev) =>
-      prev.map((c) => (c.id === chat.id ? { ...c, starred: !c.starred } : c)),
-    );
-  }, []);
+    return groupSessionsByDate(list);
+  }, [search, allSessions]);
 
   return (
     <>
-      <FlatList
-        data={filtered}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => item.id}
         contentInsetAdjustmentBehavior="automatic"
         automaticallyAdjustContentInsets
         automaticallyAdjustsScrollIndicatorInsets
         automaticallyAdjustKeyboardInsets
         contentContainerClassName="android:pb-safe pb-0"
-        renderItem={({ item }) => (
-          <ChatRow
-            item={item}
-            onRename={() => handleRename(item)}
-            onDelete={() => handleDelete(item)}
-            onStar={() => handleStar(item)}
-          />
+        renderItem={({ item }) => <ChatRow item={item} />}
+        renderSectionHeader={({ section }) => (
+          <Text className="text-[13px] font-semibold text-muted-foreground px-6 pt-5 pb-1.5 bg-background">
+            {section.label}
+          </Text>
         )}
-        ListEmptyComponent={search ? <EmptySearch query={search} /> : null}
+        ListEmptyComponent={
+          search ? (
+            <EmptySearch query={search} />
+          ) : (
+            <View className="flex-1 items-center justify-center pt-32">
+              <Text className="text-[17px] text-muted-foreground">
+                暂无对话记录
+              </Text>
+            </View>
+          )
+        }
+        stickySectionHeadersEnabled={false}
       />
 
       <Stack.SearchBar
-        placeholder="搜索"
+        placeholder="搜索对话内容"
         hideWhenScrolling={false}
         onChangeText={(e) => setSearch(e.nativeEvent.text)}
         onCancelButtonPress={() => setSearch("")}
       />
 
       <LeftToolbar />
-      <RightToolbar filter={filter} setFilter={setFilter} />
       <BottomToolbar />
     </>
   );
@@ -189,9 +200,9 @@ function LeftToolbar() {
   if (process.env.EXPO_OS === "android") {
     return (
       <Stack.Toolbar placement="left" asChild>
-          <Pressable
-            onPress={openDrawer}
-            accessibilityLabel="打开抽屉"
+        <Pressable
+          onPress={openDrawer}
+          accessibilityLabel="打开抽屉"
           accessibilityRole="button"
           className="p-2 -ml-1 active:opacity-60"
         >
@@ -207,37 +218,6 @@ function LeftToolbar() {
   );
 }
 
-function RightToolbar({
-  filter,
-  setFilter,
-}: {
-  filter: Filter;
-  setFilter: (filter: Filter) => void;
-}) {
-  return (
-    <Stack.Toolbar placement="right">
-      <Stack.Toolbar.Menu icon="line.horizontal.3.decrease">
-        <Stack.Toolbar.Menu inline>
-          <Stack.Toolbar.MenuAction
-            icon="bubble.left.and.bubble.right"
-            isOn={filter === "all"}
-            onPress={() => setFilter("all")}
-          >
-            全部对话
-          </Stack.Toolbar.MenuAction>
-          <Stack.Toolbar.MenuAction
-            icon="star"
-            isOn={filter === "starred"}
-            onPress={() => setFilter("starred")}
-          >
-            已收藏
-          </Stack.Toolbar.MenuAction>
-        </Stack.Toolbar.Menu>
-      </Stack.Toolbar.Menu>
-    </Stack.Toolbar>
-  );
-}
-
 function BottomToolbar() {
   const router = useRouter();
 
@@ -249,7 +229,10 @@ function BottomToolbar() {
       <Stack.Toolbar.Button
         tintColor={Color.ios.label}
         icon="square.and.pencil"
-        onPress={() => router.navigate("/")}
+        onPress={() => {
+          createSession();
+          router.navigate("/");
+        }}
         separateBackground
       />
     </Stack.Toolbar>

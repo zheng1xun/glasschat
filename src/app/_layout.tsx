@@ -13,6 +13,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { ModelProvider } from "@/components/model-context";
 import { hydrateApiConfig } from "@/lib/api-config";
+import { hydrateChatSessions } from "@/lib/chat-sessions";
 import {
   DarkTheme,
   DefaultTheme,
@@ -69,6 +70,7 @@ export const unstable_settings = {
 export default function RootLayout() {
   useEffect(() => {
     hydrateApiConfig();
+    hydrateChatSessions();
   }, []);
 
   return (

@@ -18,12 +18,20 @@ import { ComposerToggles } from "@/components/chat/composer-toggles";
 import { ReasoningCard } from "@/components/chat/reasoning-card";
 import { Icon } from "@/components/icon";
 import { MainHeader } from "@/components/main-header";
+import {
+  getCurrentSessionId,
+  getSessionMessages,
+  saveSessionMessages,
+  subscribeChatSessions,
+  type StoredMessage,
+} from "@/lib/chat-sessions";
 import { OpenAICompatTransport } from "@/lib/openai-compat-transport";
 import { useChat } from "@ai-sdk/react";
+import type { UIMessage } from "ai";
 import * as Haptics from "expo-haptics";
 import { Link } from "expo-router";
 import { Plus } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Text, View } from "react-native";
 
 const USE_MOCK = process.env.EXPO_PUBLIC_MOCK_AI === "1";
@@ -71,7 +79,7 @@ function getReasoningFromParts(
     .join("");
 }
 
-function useAIChat() {
+function useAIChat(sessionId: string) {
   const [input, setInput] = useState("");
   const streamingStore = useMemo(() => createStreamingStore(), []);
   const reasoningStore = useMemo(() => createStreamingStore(), []);
@@ -82,14 +90,36 @@ function useAIChat() {
   const reasoningStartRef = useRef(new Map<string, number>());
   const reasoningDurationRef = useRef(new Map<string, number>());
 
+  // 载入这个会话的历史消息（AI SDK v6 用 messages 字段恢复会话）
+  const initialMessages = useMemo(
+    () => getSessionMessages(sessionId) as unknown as UIMessage[],
+    [sessionId],
+  );
+
   const {
     messages: uiMessages,
     sendMessage,
     status,
     error,
-  } = useChat({ transport });
+  } = useChat({ id: sessionId, messages: initialMessages, transport });
 
   const isStreaming = status === "streaming";
+
+  // 流式开始/结束时把消息持久化到会话存储
+  const prevStatusRef = useRef(status);
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    prevStatusRef.current = status;
+    if (
+      prev !== status &&
+      (status === "streaming" || prev === "streaming")
+    ) {
+      saveSessionMessages(
+        sessionId,
+        uiMessages as unknown as StoredMessage[],
+      );
+    }
+  }, [status, uiMessages, sessionId]);
 
   // Map UIMessages to ChatMessages
   const messages: ChatMessage[] = useMemo(() => {
@@ -271,7 +301,21 @@ function useMockChat() {
 }
 
 export default function ChatScreen() {
-  const chat = USE_MOCK ? useMockChat() : useAIChat();
+  const currentId = useSyncExternalStore(
+    subscribeChatSessions,
+    getCurrentSessionId,
+  );
+
+  if (!currentId) {
+    // 会话存储水合完成前的空白帧
+    return <View className="flex-1 bg-background" />;
+  }
+  // key 保证切换会话时 useChat 整体重挂载，互不串台
+  return <ChatScreenInner key={currentId} sessionId={currentId} />;
+}
+
+function ChatScreenInner({ sessionId }: { sessionId: string }) {
+  const chat = USE_MOCK ? useMockChat() : useAIChat(sessionId);
   const { messages, isGenerating, streamingStore, reasoningStore } = chat;
 
   const renderMessage = useCallback(

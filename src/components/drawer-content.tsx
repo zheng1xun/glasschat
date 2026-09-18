@@ -3,7 +3,18 @@ import "@/global.css";
 import { Icon } from "@/components/icon";
 import { TouchableGlass } from "@/components/touchable-glass";
 import { SafeAreaView } from "@/components/tw";
-import { MOCK_CHATS } from "@/utils/mock-chats";
+import {
+  createSession,
+  deleteSession,
+  getSessions,
+  groupSessionsByDate,
+  renameSession,
+  setCurrentSession,
+  sortedSessions,
+  subscribeChatSessions,
+  togglePinSession,
+  type ChatSession,
+} from "@/lib/chat-sessions";
 import { cn } from "@/utils/tailwind";
 import type { Href } from "expo-router";
 import { Plus } from "lucide-react-native";
@@ -14,8 +25,9 @@ import React, {
   useCallback,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 type DrawerContextValue = {
   isOpen: boolean;
@@ -68,33 +80,87 @@ function DrawerNavItem({
 function DrawerChatItem({
   title,
   onPress,
+  onLongPress,
   active,
+  pinned,
 }: {
   title: string;
   onPress: () => void;
+  onLongPress?: () => void;
   active?: boolean;
+  pinned?: boolean;
 }) {
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={400}
       className={cn(
         `px-4 py-2.5 mx-2 rounded-[10px] active:bg-accent`,
         active && "bg-muted",
       )}
     >
-      <Text
-        numberOfLines={1}
-        className={cn(
-          `text-[15px]`,
-          active
-            ? "text-foreground"
-            : "text-muted-foreground",
-        )}
-      >
-        {title}
-      </Text>
+      <View className="flex-row items-center gap-1.5">
+        {pinned && <Text className="text-[11px]">📌</Text>}
+        <Text
+          numberOfLines={1}
+          className={cn(
+            `text-[15px] flex-1`,
+            active
+              ? "text-foreground"
+              : "text-muted-foreground",
+          )}
+        >
+          {title}
+        </Text>
+      </View>
     </Pressable>
   );
+}
+
+/** 长按会话弹出的管理菜单（置顶/重命名/删除） */
+function showChatActions(chat: ChatSession) {
+  Alert.alert(chat.title, undefined, [
+    {
+      text: chat.pinned ? "取消置顶" : "置顶",
+      onPress: () => togglePinSession(chat.id),
+    },
+    {
+      text: "重命名",
+      onPress: () => {
+        Alert.prompt(
+          "重命名对话",
+          undefined,
+          [
+            { text: "取消", style: "cancel" },
+            {
+              text: "好",
+              onPress: (value?: string) => {
+                if (value?.trim()) renameSession(chat.id, value);
+              },
+            },
+          ],
+          "plain-text",
+          chat.title,
+        );
+      },
+    },
+    {
+      text: "删除",
+      style: "destructive",
+      onPress: () => {
+        Alert.alert("删除对话", `确定删除「${chat.title}」吗？`, [
+          { text: "取消", style: "cancel" },
+          {
+            text: "删除",
+            style: "destructive",
+            onPress: () => deleteSession(chat.id),
+          },
+        ]);
+      },
+    },
+    { text: "取消", style: "cancel" },
+  ]);
 }
 
 export function DrawerContent({
@@ -104,22 +170,13 @@ export function DrawerContent({
   onNavigate: (path: Href) => void;
   onOpenModal: (path: Href) => void;
 }) {
-  // 按时间分组：今天 / 昨天 / 过去 7 天 / 更早
-  const groups = useMemo(() => {
-    const buckets = [
-      { label: "今天", items: [] as typeof MOCK_CHATS },
-      { label: "昨天", items: [] as typeof MOCK_CHATS },
-      { label: "过去 7 天", items: [] as typeof MOCK_CHATS },
-      { label: "更早", items: [] as typeof MOCK_CHATS },
-    ];
-    for (const chat of MOCK_CHATS) {
-      if (chat.daysAgo <= 0) buckets[0].items.push(chat);
-      else if (chat.daysAgo === 1) buckets[1].items.push(chat);
-      else if (chat.daysAgo <= 7) buckets[2].items.push(chat);
-      else buckets[3].items.push(chat);
-    }
-    return buckets.filter((b) => b.items.length > 0);
-  }, []);
+  const allSessions = useSyncExternalStore(subscribeChatSessions, getSessions);
+
+  // 按时间分组：已置顶 / 今天 / 昨天 / 过去 7 天 / 更早
+  const groups = useMemo(
+    () => groupSessionsByDate(sortedSessions()),
+    [allSessions],
+  );
 
   return (
     <SafeAreaView
@@ -150,18 +207,22 @@ export function DrawerContent({
           }}
         />
 
-        {/* 最近对话（按时间分组） */}
+        {/* 历史会话（按时间分组，长按管理） */}
         {groups.map((group) => (
           <View key={group.label}>
             <Text className="text-[13px] font-semibold text-muted-foreground px-6 pt-5 pb-1.5">
               {group.label}
             </Text>
-            {group.items.map((chat) => (
+            {group.data.map((chat) => (
               <DrawerChatItem
                 key={chat.id}
                 title={chat.title}
-                active={chat.id === "1"}
-                onPress={() => onNavigate("/")}
+                pinned={chat.pinned}
+                onPress={() => {
+                  setCurrentSession(chat.id);
+                  onNavigate("/");
+                }}
+                onLongPress={() => showChatActions(chat)}
               />
             ))}
           </View>
@@ -188,7 +249,10 @@ export function DrawerContent({
         </TouchableGlass>
         <View className="flex-1" />
         <TouchableGlass
-          onPress={() => onNavigate("/")}
+          onPress={() => {
+            createSession();
+            onNavigate("/");
+          }}
           className="w-10 h-10 rounded-full bg-foreground active:bg-muted items-center justify-center"
         >
           <Icon
