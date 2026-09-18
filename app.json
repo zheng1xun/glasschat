@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "GlassChat",
+    "slug": "glasschat",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "glasschat",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/images/icon.png",
+    "ios": {
+      "bundleIdentifier": "com.glasschat.app",
+      "infoPlist": {
+        "CFBundleDisplayName": "琉璃",
+        "UIViewControllerBasedStatusBarAppearance": true,
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.glasschat.app",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "server"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ],
+      "expo-asset",
+      "expo-font",
+      "expo-image",
+      "expo-web-browser",
+      "expo-system-ui",
+      "expo-status-bar"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
