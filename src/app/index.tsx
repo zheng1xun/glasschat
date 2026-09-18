@@ -21,6 +21,7 @@ import { MainHeader } from "@/components/main-header";
 import {
   getCurrentSessionId,
   getSessionMessages,
+  hydrateChatSessions,
   saveSessionMessages,
   subscribeChatSessions,
   type StoredMessage,
@@ -40,10 +41,10 @@ const USE_MOCK = process.env.EXPO_PUBLIC_MOCK_AI === "1";
 const STREAMING_THROTTLE_MS = 32;
 
 const MOCK_RESPONSES = [
-  "That's a great question! Here's what I think:\n\nThe key insight is that **simplicity** often beats complexity. When you break down the problem into smaller pieces, the solution becomes much clearer.\n\n```javascript\nconst answer = problems\n  .map(simplify)\n  .reduce(combine, []);\n```\n\nHope that helps!",
-  "I'd be happy to help with that. Let me walk you through it step by step:\n\n1. **First**, identify the core requirements\n2. **Then**, design the interface\n3. **Finally**, implement and test\n\nThe most important thing is to start simple and iterate. You can always add more features later.",
-  "Interesting! Here's a quick overview:\n\n> The best code is the code you don't have to write.\n\nThat said, when you *do* need to write code, keep these principles in mind:\n\n- **Readability** over cleverness\n- **Composition** over inheritance\n- **Explicit** over implicit\n\nLet me know if you want me to dive deeper into any of these!",
-  "Sure thing! Here's a concise answer:\n\nThe approach I'd recommend is to use a **streaming architecture** where data flows through the system in real-time. This gives you:\n\n- Lower latency\n- Better resource utilization\n- Simpler error handling\n\n```python\nasync for chunk in stream:\n    process(chunk)\n```\n\nWant me to elaborate on any part?",
+  "问得好！说下我的看法：\n\n关键在于**化繁为简**。把大问题拆成小问题，答案自然就清晰了。\n\n```javascript\nconst answer = problems\n  .map(simplify)\n  .reduce(combine, []);\n```\n\n希望能帮到你！",
+  "当然可以，我分几步给你讲：\n\n1. **首先**，明确核心需求\n2. **然后**，设计界面结构\n3. **最后**，实现并验证\n\n最重要的是先跑通最小版本，再迭代完善。",
+  "这个问题很有意思！简单说一下：\n\n> 最好的代码，是你不需要写的代码。\n\n不过当真的要写的时候，记住几个原则：\n\n- **可读性**优先于炫技\n- **组合**优先于继承\n- **显式**优先于隐式\n\n想深入哪一部分，随时告诉我。",
+  "好的，直接给结论：\n\n推荐用**流式架构**，数据实时流动。好处是：\n\n- 首字延迟更低\n- 资源占用更省\n- 错误处理更简单\n\n```python\nasync for chunk in stream:\n    process(chunk)\n```\n\n需要我展开讲哪一点？",
 ];
 
 async function mockStreamResponse(
@@ -307,6 +308,11 @@ function useMockChat() {
 }
 
 export default function ChatScreen() {
+  // 兜底：web 版布局不经过 _layout.tsx，这里自行确保会话存储已初始化
+  useEffect(() => {
+    hydrateChatSessions();
+  }, []);
+
   const currentId = useSyncExternalStore(
     subscribeChatSessions,
     getCurrentSessionId,

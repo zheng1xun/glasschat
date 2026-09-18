@@ -56,8 +56,8 @@ function SidebarTooltip({
 }
 
 const NAV_ITEMS = [
-  { href: "/", label: "Chats" },
-  { href: "/settings", label: "Settings" },
+  { href: "/", label: "对话记录" },
+  { href: "/settings", label: "设置" },
 ] as const;
 
 
@@ -116,7 +116,7 @@ export function Sidebar({
           <View className="flex flex-row items-center px-4 pt-5 pb-3">
             <View className="flex flex-row items-center justify-between flex-1">
               <Text className="text-[28px] font-bold text-foreground">
-                Chat
+                琉璃
               </Text>
               <View className="flex flex-row items-center gap-1">
                 {/* Close button on mobile */}
@@ -172,7 +172,7 @@ export function Sidebar({
 
             {/* Recents */}
             <Text className="text-[13px] font-semibold text-muted-foreground/60 px-6 pt-5 pb-1.5 uppercase tracking-wider">
-              Recents
+              最近对话
             </Text>
             {MOCK_CHATS.map((chat) => {
               const isActive = chat.id === "1";
@@ -204,24 +204,24 @@ export function Sidebar({
                     <ContextMenu.Content className={MENU_CONTENT_CLASS}>
                       <ContextMenu.Item className={MENU_ITEM_CLASS}>
                         <Pin size={14} strokeWidth={1.5} />
-                        Pin chat
+              置顶对话
                       </ContextMenu.Item>
                       <ContextMenu.Item className={MENU_ITEM_CLASS}>
                         <Edit3 size={14} strokeWidth={1.5} />
-                        Rename
+              重命名
                       </ContextMenu.Item>
                       <ContextMenu.Item className={MENU_ITEM_CLASS}>
                         <Share size={14} strokeWidth={1.5} />
-                        Share
+              分享
                       </ContextMenu.Item>
                       <ContextMenu.Item className={MENU_ITEM_CLASS}>
                         <Archive size={14} strokeWidth={1.5} />
-                        Archive
+              归档
                       </ContextMenu.Item>
                       <ContextMenu.Separator className={MENU_SEPARATOR_CLASS} />
                       <ContextMenu.Item className={MENU_DESTRUCTIVE_CLASS}>
                         <Trash2 size={14} strokeWidth={1.5} />
-                        Delete
+              删除
                       </ContextMenu.Item>
                     </ContextMenu.Content>
                   </ContextMenu.Portal>
@@ -235,7 +235,7 @@ export function Sidebar({
         {isCollapsed && (
           <Tooltip.Provider delayDuration={200}>
             <View className="flex flex-col items-center gap-1 pt-3 px-1.5">
-              <SidebarTooltip label="Open sidebar">
+              <SidebarTooltip label="打开侧栏">
                 <Pressable
                   onPress={onCollapse}
                   className="sidebar-toggle-btn flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -248,14 +248,14 @@ export function Sidebar({
                   </View>
                 </Pressable>
               </SidebarTooltip>
-              <SidebarTooltip label="New chat">
+              <SidebarTooltip label="新对话">
                 <Link href="/" asChild>
                   <Pressable className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground">
                     <SquarePen size={18} strokeWidth={1.5} />
                   </Pressable>
                 </Link>
               </SidebarTooltip>
-              <SidebarTooltip label="Delete chat">
+              <SidebarTooltip label="删除对话">
                 <Pressable className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground">
                   <Trash2 size={18} strokeWidth={1.5} />
                 </Pressable>
@@ -276,10 +276,10 @@ export function Sidebar({
                   <Pressable className="flex flex-row items-center gap-2.5 rounded-full hover:opacity-70 active:opacity-60">
                     <View className="rounded-full bg-muted items-center justify-center shrink-0 w-8 h-8">
                       <Text className="font-semibold text-foreground text-[13px]">
-                        EB
+                      我
                       </Text>
                     </View>
-                    <Text className="text-sm text-foreground">Evan Bacon</Text>
+                    <Text className="text-sm text-foreground">我的账号</Text>
                   </Pressable>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
@@ -291,18 +291,18 @@ export function Sidebar({
                   >
                     <DropdownMenu.Item className={MENU_ITEM_CLASS}>
                       <User size={14} strokeWidth={1.5} />
-                      Profile
+              个人资料
                     </DropdownMenu.Item>
                     <DropdownMenu.Item className={MENU_ITEM_CLASS}>
                       <Settings size={14} strokeWidth={1.5} />
-                      Settings
+              设置
                     </DropdownMenu.Item>
                     <DropdownMenu.Separator
                       className={MENU_SEPARATOR_CLASS}
                     />
                     <DropdownMenu.Item className={MENU_DESTRUCTIVE_CLASS}>
                       <LogOut size={14} strokeWidth={1.5} />
-                      Sign out
+              退出登录
                     </DropdownMenu.Item>
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>

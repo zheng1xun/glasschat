@@ -1,3 +1,4 @@
+import { getApiConfig } from "@/lib/api-config";
 import { ArrowUp, Paperclip } from "lucide-react";
 import { Children, type ReactNode, isValidElement } from "react";
 import {
@@ -94,9 +95,11 @@ export function PromptInputBody({ children }: { children: ReactNode }) {
           <Pressable className="flex h-7 w-7 items-center justify-center rounded-lg border border-border/40 transition-colors hover:bg-accent">
             <Paperclip size={14} className="text-muted-foreground" />
           </Pressable>
-          {/* Model selector mock */}
+          {/* 当前模型 */}
           <Pressable className="flex h-7 flex-row items-center gap-1.5 rounded-lg px-2 transition-colors hover:bg-accent">
-            <Text className="text-[12px] text-muted-foreground">Opus</Text>
+            <Text className="text-[12px] text-muted-foreground">
+              {getApiConfig().model}
+            </Text>
           </Pressable>
         </View>
         {submit}
@@ -110,7 +113,7 @@ export function PromptInputBody({ children }: { children: ReactNode }) {
  * resize: none removes the browser resize handle.
  */
 export function PromptInputTextarea({
-  placeholder = "Chat with Agent...",
+  placeholder = "给琉璃发消息…",
   maxLength = 1000,
 }: {
   placeholder?: string;

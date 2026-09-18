@@ -1,4 +1,5 @@
-import { useModel } from "@/components/model-context";
+import { getApiConfig, setApiConfig, subscribeApiConfig } from "@/lib/api-config";
+import { useSyncExternalStore } from "react";
 import {
   Button,
   Host,
@@ -20,15 +21,16 @@ import { useColorScheme } from "react-native";
 import { useDrawer } from "./drawer-content";
 
 function HeaderTitleMenu() {
-  const { models, selectedModel, extendedThinking, setExtendedThinking } =
-    useModel();
+  const config = useSyncExternalStore(subscribeApiConfig, getApiConfig);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const headerFg = isDark ? "#fff" : "#000";
   const headerFgMuted = isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.5)";
 
-  const selected = models.find((m) => m.id === selectedModel);
-  const subtitle = extendedThinking ? "深度思考" : undefined;
+  // 显示真实模型名；reasoner 模型显示「深度思考」副标题
+  const modelLabel = config.model;
+  const reasoningOn = config.model === "deepseek-reasoner";
+  const subtitle = reasoningOn ? "深度思考" : undefined;
   return (
     <Host
       style={{
@@ -46,7 +48,7 @@ function HeaderTitleMenu() {
                   font({ weight: "semibold", size: 17 }),
                 ]}
               >
-                {selected?.label ?? "模型"}
+                {modelLabel}
               </SUIText>
               <SUIImage systemName="chevron.down" size={10} color={headerFg} />
             </HStack>
@@ -76,9 +78,16 @@ function HeaderTitleMenu() {
             onPress={() => {}}
           />
         </Section>
-        <Toggle isOn={extendedThinking} onIsOnChange={setExtendedThinking}>
+        <Toggle
+          isOn={reasoningOn}
+          onIsOnChange={(value) =>
+            setApiConfig({
+              model: value ? "deepseek-reasoner" : "deepseek-chat",
+            })
+          }
+        >
           <SUIText>深度思考</SUIText>
-          <SUIText>复杂任务思考更久</SUIText>
+          <SUIText>切换 deepseek-reasoner 推理模型</SUIText>
         </Toggle>
       </Menu>
     </Host>
