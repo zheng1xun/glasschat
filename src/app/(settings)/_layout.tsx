@@ -27,7 +27,7 @@ export default function SettingsLayout() {
       <Stack.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: "设置",
           headerLeft: () => null,
         }}
       >
@@ -41,17 +41,17 @@ export default function SettingsLayout() {
             </Stack.Toolbar.MenuAction>
             <Stack.Toolbar.Menu inline>
               <Stack.Toolbar.MenuAction icon="doc.text">
-                Acceptable Use Policy
+                使用政策
               </Stack.Toolbar.MenuAction>
               <Stack.Toolbar.MenuAction icon="arrow.up.forward.square">
-                Consumer Terms
+                服务条款
               </Stack.Toolbar.MenuAction>
               <Stack.Toolbar.MenuAction icon="arrow.up.forward.square">
-                Privacy Policy
+                隐私政策
               </Stack.Toolbar.MenuAction>
             </Stack.Toolbar.Menu>
             <Stack.Toolbar.MenuAction icon="arrow.up.forward.square">
-              Help & Support
+              帮助与支持
             </Stack.Toolbar.MenuAction>
           </Stack.Toolbar.Menu>
         </Stack.Toolbar>
@@ -59,13 +59,13 @@ export default function SettingsLayout() {
       <Stack.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: "个人资料",
         }}
       />
       <Stack.Screen
         name="capabilities"
         options={{
-          title: "Capabilities",
+          title: "功能",
         }}
       />
     </Stack>

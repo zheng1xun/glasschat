@@ -52,12 +52,12 @@ export default function ModelPickerSheet() {
     >
       <AndroidGrabber />
       <View className="pt-2">
-        <ActionRow icon={Archive} label="Add to project" onPress={() => {}} />
-        <ActionRow icon={Star} label="Star" onPress={() => {}} />
-        <ActionRow icon={Pencil} label="Rename" onPress={() => {}} />
+        <ActionRow icon={Archive} label="添加到项目" onPress={() => {}} />
+        <ActionRow icon={Star} label="收藏" onPress={() => {}} />
+        <ActionRow icon={Pencil} label="重命名" onPress={() => {}} />
         <ActionRow
           icon={Trash2}
-          label="Delete"
+          label="删除"
           destructive
           onPress={() => {}}
         />
@@ -68,9 +68,9 @@ export default function ModelPickerSheet() {
       <View className="flex-row items-center px-5 py-3 gap-3.5">
         <Icon icon={Sparkles} className="w-5 h-5 text-foreground" />
         <View className="flex-1">
-          <Text className="text-[17px] text-foreground">Extended thinking</Text>
+          <Text className="text-[17px] text-foreground">深度思考</Text>
           <Text className="text-[13px] text-muted-foreground">
-            Think longer for complex tasks
+            复杂任务思考更久
           </Text>
         </View>
         <Switch value={extendedThinking} onValueChange={setExtendedThinking} />

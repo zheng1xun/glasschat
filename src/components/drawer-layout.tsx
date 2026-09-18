@@ -332,7 +332,7 @@ function Overlay({
         onPress={onPress}
         className="flex flex-1 pointer-events-auto"
         role="button"
-        aria-label="Close drawer"
+        aria-label="关闭抽屉"
         accessible
       />
     </Animated.View>

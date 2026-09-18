@@ -28,40 +28,40 @@ export default function CapabilitiesScreen() {
       <CapabilityToggle
         icon={Box}
         label="Artifacts"
-        description="Required by code execution"
+        description="代码运行的前置依赖"
         value={artifacts}
         onValueChange={setArtifacts}
       />
       <CapabilityToggle
         icon={FileCog}
-        label="Code execution and file creation"
-        description="Allow Agent to execute code and create and edit docs, spreadsheets, presentations, PDFs, and data reports."
+        label="代码运行与文件创建"
+        description="允许 AI 运行代码，创建和编辑文档、表格、演示文稿、PDF 和数据报告。"
         value={codeExecution}
         onValueChange={setCodeExecution}
       />
       <CapabilityToggle
         icon={Globe}
-        label="Web search"
-        description="Agent will automatically search the web when it determines it needs current information"
+        label="联网搜索"
+        description="当 AI 判断需要最新信息时，会自动搜索网络"
         value={webSearch}
         onValueChange={setWebSearch}
       />
 
       <View className="h-px bg-border mx-5 mt-2" />
 
-      <SectionHeader title="Memory" />
+      <SectionHeader title="记忆" />
 
       <CapabilityToggle
         icon={Search}
-        label="Search and reference chats"
-        description="Allow Agent to search for relevant details in past chats. Learn more."
+        label="搜索并引用历史对话"
+        description="允许 AI 搜索历史对话中的相关细节。"
         value={searchChats}
         onValueChange={setSearchChats}
       />
       <CapabilityToggle
         icon={Brain}
-        label="Generate memory from chat history"
-        description="Allow Agent to remember relevant context from your chats. This setting controls memory for both chats and projects. Learn more."
+        label="从对话历史生成记忆"
+        description="允许 AI 记住对话中的相关上下文。此设置同时作用于对话和项目。"
         value={generateMemory}
         onValueChange={setGenerateMemory}
       />
@@ -72,10 +72,10 @@ export default function CapabilitiesScreen() {
       >
         <View className="flex-1">
           <Text className="text-[15px] font-medium text-foreground">
-            View your memory
+            查看你的记忆
           </Text>
           <Text className="text-[13px] text-muted-foreground mt-0.5">
-            Updated 4d ago from your chats
+            4 天前根据你的对话更新
           </Text>
         </View>
         <Icon
@@ -86,18 +86,18 @@ export default function CapabilitiesScreen() {
 
       <View className="h-px bg-border mx-5 mt-6" />
 
-      <SectionHeader title="Tool access" />
+      <SectionHeader title="工具调用" />
 
       <ToolAccessOption
-        label="Auto"
-        description="Agent chooses for you"
+        label="自动"
+        description="由 AI 为你选择"
         selected
       />
       <ToolAccessOption
-        label="On demand"
-        description="Load when needed. More messages, lower accuracy"
+        label="按需加载"
+        description="需要时再加载。消息更多，精度略低"
       />
-      <ToolAccessOption label="Always available" />
+      <ToolAccessOption label="始终可用" />
     </ScrollView>
   );
 }

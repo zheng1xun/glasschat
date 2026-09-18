@@ -28,7 +28,7 @@ function HeaderTitleMenu() {
   const headerFgMuted = isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.5)";
 
   const selected = models.find((m) => m.id === selectedModel);
-  const subtitle = extendedThinking ? "Extended" : undefined;
+  const subtitle = extendedThinking ? "深度思考" : undefined;
   return (
     <Host
       style={{
@@ -46,7 +46,7 @@ function HeaderTitleMenu() {
                   font({ weight: "semibold", size: 17 }),
                 ]}
               >
-                {selected?.label ?? "Model"}
+                {selected?.label ?? "模型"}
               </SUIText>
               <SUIImage systemName="chevron.down" size={10} color={headerFg} />
             </HStack>
@@ -61,24 +61,24 @@ function HeaderTitleMenu() {
         }
         modifiers={[controlSize("regular")]}
       >
-        <Section title="Existing tools for iOS app tech stack detection">
+        <Section title="对话操作">
           <Button
             systemImage="archivebox"
-            label="Add to project"
+            label="添加到项目"
             onPress={() => {}}
           />
-          <Button systemImage="star" label="Star" onPress={() => {}} />
-          <Button systemImage="pencil" label="Rename" onPress={() => {}} />
+          <Button systemImage="star" label="收藏" onPress={() => {}} />
+          <Button systemImage="pencil" label="重命名" onPress={() => {}} />
           <Button
             systemImage="trash"
-            label="Delete"
+            label="删除"
             role="destructive"
             onPress={() => {}}
           />
         </Section>
         <Toggle isOn={extendedThinking} onIsOnChange={setExtendedThinking}>
-          <SUIText>Extended thinking</SUIText>
-          <SUIText>Think longer for complex tasks</SUIText>
+          <SUIText>深度思考</SUIText>
+          <SUIText>复杂任务思考更久</SUIText>
         </Toggle>
       </Menu>
     </Host>

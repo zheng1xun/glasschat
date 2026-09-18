@@ -8,7 +8,7 @@ import { useDrawer } from "./drawer-content";
 function HeaderTitleMenu() {
   const { models, selectedModel, extendedThinking } = useModel();
   const selected = models.find((m) => m.id === selectedModel);
-  const subtitle = extendedThinking ? "Extended" : undefined;
+  const subtitle = extendedThinking ? "深度思考" : undefined;
 
   return (
     <Link href="/model-picker" asChild>
@@ -18,7 +18,7 @@ function HeaderTitleMenu() {
       >
         <View className="flex-row items-center gap-1">
           <Text className="text-[17px] font-semibold text-foreground">
-            {selected?.label ?? "Model"}
+            {selected?.label ?? "模型"}
           </Text>
           <Icon icon={ChevronDown} className="w-3 h-3 text-foreground" />
         </View>
@@ -43,7 +43,7 @@ export function MainHeader() {
         <Stack.Toolbar placement="left" asChild>
           <Pressable
             onPress={openDrawer}
-            accessibilityLabel="Open drawer"
+            accessibilityLabel="打开抽屉"
             accessibilityRole="button"
             className="p-2 -ml-1 active:opacity-60"
           >
@@ -64,7 +64,7 @@ export function MainHeader() {
         // TODO: Migrate to unified Toolbar support for Android in SDK 56
         <Stack.Toolbar placement="right" asChild>
           <Pressable
-            accessibilityLabel="Reader"
+            accessibilityLabel="阅读模式"
             accessibilityRole="button"
             className="p-2 -mr-1 active:opacity-60"
           >

@@ -107,7 +107,7 @@ export function DrawerContent({
       {/* Header */}
       <View className="px-4 pt-2 pb-3">
         <Text className="text-[28px] font-bold text-foreground">
-          Chat
+          琉璃
         </Text>
       </View>
 
@@ -116,9 +116,9 @@ export function DrawerContent({
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 8 }}
       >
-        <DrawerNavItem label="Chats" onPress={() => onNavigate("/chats")} />
+        <DrawerNavItem label="对话记录" onPress={() => onNavigate("/chats")} />
         <DrawerNavItem
-          label="Settings"
+          label="设置"
           onPress={() => {
             if (process.env.EXPO_OS === "android") {
               onNavigate("/(settings)/settings");
@@ -129,7 +129,7 @@ export function DrawerContent({
 
         {/* Recents */}
         <Text className="text-[13px] font-semibold text-muted-foreground px-6 pt-5 pb-1.5">
-          Recents
+          最近对话
         </Text>
         {MOCK_CHATS.map((chat) => (
           <DrawerChatItem
@@ -152,11 +152,11 @@ export function DrawerContent({
         >
           <View className="w-8 h-8 rounded-full bg-muted items-center justify-center">
             <Text className="text-[13px] font-semibold text-foreground">
-              EB
+              我
             </Text>
           </View>
           <Text className="text-sm text-foreground">
-            Evan Bacon
+            我的账号
           </Text>
         </TouchableGlass>
         <View className="flex-1" />

@@ -2,11 +2,9 @@ import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 export default function ProfileScreen() {
-  const [fullName, setFullName] = useState("Evan Bacon");
-  const [nickname, setNickname] = useState("Evan");
-  const [preferences, setPreferences] = useState(
-    "I'm a creator and software developer.",
-  );
+  const [fullName, setFullName] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [preferences, setPreferences] = useState("我喜欢简洁直接的回答。");
 
   return (
     <ScrollView
@@ -15,9 +13,9 @@ export default function ProfileScreen() {
       contentContainerClassName="px-5 pb-10"
       keyboardDismissMode="interactive"
     >
-      {/* Full Name */}
+      {/* 姓名 */}
       <Text className="text-[13px] font-medium text-muted-foreground mt-6 mb-2">
-        Full Name
+        姓名
       </Text>
       <TextInput
         value={fullName}
@@ -26,9 +24,9 @@ export default function ProfileScreen() {
         placeholderTextColor="#999"
       />
 
-      {/* Nickname */}
+      {/* 昵称 */}
       <Text className="text-[13px] font-medium text-muted-foreground mt-5 mb-2">
-        Nickname
+        昵称
       </Text>
       <TextInput
         value={nickname}
@@ -37,21 +35,21 @@ export default function ProfileScreen() {
         placeholderTextColor="#999"
       />
 
-      {/* Update Profile Button */}
+      {/* 更新资料按钮 */}
       <Pressable
         className="bg-foreground rounded-xl mt-6 py-3.5 items-center active:opacity-80 border-continuous"
       >
         <Text className="text-[17px] font-semibold text-background">
-          Update Profile
+          更新资料
         </Text>
       </Pressable>
 
-      {/* Divider */}
+      {/* 分割线 */}
       <View className="h-px bg-border my-6" />
 
-      {/* Personal Preferences */}
+      {/* 个人偏好 */}
       <Text className="text-[15px] font-medium text-muted-foreground mb-2">
-        Personal Preferences
+        个人偏好
       </Text>
       <TextInput
         value={preferences}
@@ -62,25 +60,24 @@ export default function ProfileScreen() {
         placeholderTextColor="#999"
       />
       <Text className="text-[13px] text-muted-foreground mt-2 leading-relaxed">
-        Your preferences will apply to all conversations, within Agent's
-        guidelines.
+        你的偏好会应用到所有对话中。
       </Text>
 
-      {/* Save Preferences Button */}
+      {/* 保存偏好按钮 */}
       <Pressable
         className="bg-muted rounded-xl mt-4 py-3.5 items-center active:opacity-80 border-continuous"
       >
         <Text className="text-[17px] font-semibold text-muted-foreground">
-          Save Preferences
+          保存偏好
         </Text>
       </Pressable>
 
-      {/* Divider */}
+      {/* 分割线 */}
       <View className="h-px bg-border my-6" />
 
-      {/* Delete Account */}
+      {/* 删除账号 */}
       <Pressable className="flex-row items-center gap-2 active:opacity-60">
-        <Text className="text-[17px] text-red-500">Delete account</Text>
+        <Text className="text-[17px] text-red-500">删除账号</Text>
       </Pressable>
     </ScrollView>
   );

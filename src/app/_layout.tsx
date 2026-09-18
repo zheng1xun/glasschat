@@ -135,7 +135,7 @@ function StackLayout() {
         name="index"
         dangerouslySingular
         options={{
-          title: "Chat",
+          title: "琉璃",
           animation: "none",
           gestureEnabled: false,
         }}
@@ -144,7 +144,7 @@ function StackLayout() {
       <Stack.Screen
         name="chats"
         options={{
-          title: "Chats",
+          title: "对话记录",
           animation: "none",
           headerLargeTitleShadowVisible: false,
           gestureEnabled: false,
@@ -154,7 +154,7 @@ function StackLayout() {
       <Stack.Screen
         name="attachments"
         options={{
-          title: "Add to chat",
+          title: "添加到对话",
           presentation: "formSheet",
           sheetAllowedDetents: [0.55],
           // following https://m3.material.io/components/bottom-sheets/specs
@@ -168,7 +168,7 @@ function StackLayout() {
       <Stack.Screen
         name="model-picker"
         options={{
-          title: "Model",
+          title: "模型",
           presentation: "formSheet",
           sheetAllowedDetents: "fitToContents",
           sheetCornerRadius: IS_ANDROID ? 28 : undefined,

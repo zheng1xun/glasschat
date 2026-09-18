@@ -138,27 +138,27 @@ export default function AddToChatSheet() {
       <View className="flex-row gap-3 px-5 pt-2 pb-4">
         <AttachmentButton
           icon={Camera}
-          label="Camera"
+          label="拍摄"
           onPress={IS_IOS ? openCamera : undefined}
         />
         <AttachmentButton
           icon={ImageIcon}
-          label="Photos"
+          label="相册"
           onPress={IS_IOS ? openPhotos : undefined}
         />
-        <AttachmentButton icon={File} label="Files" />
+        <AttachmentButton icon={File} label="文件" />
       </View>
 
       {/* Toggles */}
       <ToggleRow
         icon={Sparkles}
-        label="Research"
+        label="深度研究"
         value={research}
         onValueChange={setResearch}
       />
       <ToggleRow
         icon={Globe}
-        label="Web search"
+        label="联网搜索"
         badge="Beta"
         value={webSearch}
         onValueChange={setWebSearch}
@@ -168,9 +168,9 @@ export default function AddToChatSheet() {
       <View className="h-px bg-border mx-5 my-1" />
 
       {/* Disclosure rows */}
-      <DisclosureRow icon={Archive} label="Add to project" detail="None" />
-      <DisclosureRow icon={Paintbrush} label="Choose style" detail="Normal" />
-      <DisclosureRow icon={Wrench} label="Tool access" detail="Auto" />
+      <DisclosureRow icon={Archive} label="添加到项目" detail="无" />
+      <DisclosureRow icon={Paintbrush} label="选择风格" detail="默认" />
+      <DisclosureRow icon={Wrench} label="工具调用" detail="自动" />
     </ScrollView>
   );
 }

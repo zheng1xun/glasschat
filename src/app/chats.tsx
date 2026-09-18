@@ -11,9 +11,9 @@ import { Alert, FlatList, Pressable, Text, View } from "react-native";
 type Filter = "all" | "starred";
 
 function formatTimeAgo(daysAgo: number): string {
-  if (daysAgo < 7) return `${daysAgo} day${daysAgo === 1 ? "" : "s"} ago`;
+  if (daysAgo < 7) return `${daysAgo} 天前`;
   const weeks = Math.round(daysAgo / 7);
-  return `${weeks} week${weeks === 1 ? "" : "s"} ago`;
+  return `${weeks} 周前`;
 }
 
 type Chat = MockChat;
@@ -61,13 +61,13 @@ function ChatRow({
 
       <Link.Menu>
         <Link.MenuAction
-          title={item.starred ? "Unstar" : "Star"}
+          title={item.starred ? "取消收藏" : "收藏"}
           icon={item.starred ? "star.fill" : "star"}
           onPress={onStar}
         />
-        <Link.MenuAction title="Rename" icon="pencil" onPress={onRename} />
+        <Link.MenuAction title="重命名" icon="pencil" onPress={onRename} />
         <Link.MenuAction
-          title="Delete"
+          title="删除"
           icon="trash"
           destructive
           onPress={onDelete}
@@ -82,7 +82,7 @@ function EmptySearch({ query }: { query: string }) {
     <View className="flex-1 items-center justify-center pt-32 gap-2">
       <Icon icon={Search} className="w-10 h-10 text-muted-foreground" />
       <Text className="text-[17px] text-muted-foreground text-center px-10">
-        No results found for &ldquo;{query}&rdquo;
+        没有找到「{query}」相关的对话
       </Text>
     </View>
   );
@@ -107,12 +107,12 @@ export default function ChatsScreen() {
 
   const handleRename = useCallback((chat: Chat) => {
     Alert.prompt(
-      "Rename Chat",
+      "重命名对话",
       undefined,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: "取消", style: "cancel" },
         {
-          text: "OK",
+          text: "好",
           onPress: (newTitle?: string) => {
             if (newTitle?.trim()) {
               setChats((prev) =>
@@ -130,10 +130,10 @@ export default function ChatsScreen() {
   }, []);
 
   const handleDelete = useCallback((chat: Chat) => {
-    Alert.alert("Delete Chat", `Delete "${chat.title}"?`, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert("删除对话", `确定删除「${chat.title}」吗？`, [
+      { text: "取消", style: "cancel" },
       {
-        text: "Delete",
+        text: "删除",
         style: "destructive",
         onPress: () => {
           setChats((prev) => prev.filter((c) => c.id !== chat.id));
@@ -170,7 +170,7 @@ export default function ChatsScreen() {
       />
 
       <Stack.SearchBar
-        placeholder="Search"
+        placeholder="搜索"
         hideWhenScrolling={false}
         onChangeText={(e) => setSearch(e.nativeEvent.text)}
         onCancelButtonPress={() => setSearch("")}
@@ -189,9 +189,9 @@ function LeftToolbar() {
   if (process.env.EXPO_OS === "android") {
     return (
       <Stack.Toolbar placement="left" asChild>
-        <Pressable
-          onPress={openDrawer}
-          accessibilityLabel="Open drawer"
+          <Pressable
+            onPress={openDrawer}
+            accessibilityLabel="打开抽屉"
           accessibilityRole="button"
           className="p-2 -ml-1 active:opacity-60"
         >
@@ -223,14 +223,14 @@ function RightToolbar({
             isOn={filter === "all"}
             onPress={() => setFilter("all")}
           >
-            All chats
+            全部对话
           </Stack.Toolbar.MenuAction>
           <Stack.Toolbar.MenuAction
             icon="star"
             isOn={filter === "starred"}
             onPress={() => setFilter("starred")}
           >
-            Starred
+            已收藏
           </Stack.Toolbar.MenuAction>
         </Stack.Toolbar.Menu>
       </Stack.Toolbar.Menu>

@@ -243,8 +243,8 @@ export default function ChatScreen() {
           renderMessage={renderMessage}
           emptyState={
             <ConversationEmptyState
-              title="Chat"
-              description="Send a message to get started"
+              title="琉璃"
+              description="发一条消息，开始对话"
             />
           }
         >

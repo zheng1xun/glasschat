@@ -61,7 +61,7 @@ function PromptInputError({ message }: { message?: string }) {
           className="flex-1 text-xs text-muted-foreground"
           numberOfLines={2}
         >
-          {message || "Something went wrong"}
+          {message || "出了点问题，请稍后再试"}
         </Text>
       </View>
     </Animated.View>
@@ -135,7 +135,7 @@ export function PromptInputBody({ children }: { children: ReactNode }) {
  * input value from `ChatContext`.
  */
 export function PromptInputTextarea({
-  placeholder = "Chat with Agent...",
+  placeholder = "给琉璃发消息…",
   maxLength = 1000,
 }: {
   placeholder?: string;
