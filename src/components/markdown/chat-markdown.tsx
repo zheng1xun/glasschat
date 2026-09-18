@@ -11,8 +11,8 @@ const VAR_NAMES = [
   "--app-secondary",
   "--app-muted",
   "--app-accent",
-  // Tailwind blue
-  "--color-blue-400",
+  // 品牌强调色（DeepSeek 蓝）
+  "--app-brand",
 ] as const;
 
 /**
@@ -32,7 +32,8 @@ export function ChatMarkdown({ children }: { children: string }) {
 
   const isWeb = process.env.EXPO_OS === "web";
   const baseFontSize = isWeb ? 13 : 16;
-  const baseLineHeight = isWeb ? 21.5 : 22;
+  // DeepSeek 式阅读体验：行高 1.6~1.7 倍
+  const baseLineHeight = isWeb ? 21.5 : 26;
 
   // Only overrides — defaults from utils.ts are merged automatically
   const markdownStyles = {
@@ -42,7 +43,7 @@ export function ChatMarkdown({ children }: { children: string }) {
     heading4: { fontSize: 16, color: text },
     heading5: { fontSize: 14, color: text },
     heading6: { fontSize: 12, color: text },
-    paragraph: { fontSize: baseFontSize, lineHeight: baseLineHeight, marginVertical: 8 },
+    paragraph: { fontSize: baseFontSize, lineHeight: baseLineHeight, marginVertical: 6 },
     text: { color: text, fontSize: baseFontSize, lineHeight: baseLineHeight },
     thematicBreak: { backgroundColor: border },
     blockquote: { backgroundColor: bg3, borderColor: border, paddingHorizontal: 8 },
@@ -86,6 +87,46 @@ export function ChatMarkdown({ children }: { children: string }) {
         }
       }}
       renderRules={{
+        // 引用角标：正文里的 [1]、[2] 渲染为蓝色小角标（DeepSeek 风格）
+        text: ({ node, styles }) => {
+          const value: string = node.value ?? "";
+          if (!/\[\d{1,2}\]/.test(value)) {
+            return (
+              <Text
+                key={node.key}
+                style={styles.text as any}
+                maxFontSizeMultiplier={1.2}
+              >
+                {value}
+              </Text>
+            );
+          }
+          const parts = value.split(/(\[\d{1,2}\])/g);
+          return (
+            <Text
+              key={node.key}
+              style={styles.text as any}
+              maxFontSizeMultiplier={1.2}
+            >
+              {parts.map((part, i) =>
+                /^\[\d{1,2}\]$/.test(part) ? (
+                  <Text
+                    key={i}
+                    style={{
+                      fontSize: 10,
+                      color: "#4B7BFF",
+                      transform: [{ translateY: -5 }],
+                    }}
+                  >
+                    {part}
+                  </Text>
+                ) : (
+                  part
+                ),
+              )}
+            </Text>
+          );
+        },
         listItem: ({ node, styles, children, extras }) => (
           <View key={node.key} style={styles.listItem as any}>
             {extras?.customListStyleType ? (

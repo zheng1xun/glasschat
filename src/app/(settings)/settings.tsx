@@ -11,9 +11,8 @@ import {
 import * as Linking from "expo-linking";
 import {
   Check,
-  ChevronRight,
-  CircleCheck,
   CircleAlert,
+  CircleCheck,
   KeyRound,
   Link2,
   Sparkles,
@@ -32,7 +31,7 @@ export default function SettingsScreen() {
       contentContainerClassName="android:pb-safe"
     >
       {/* 连接状态 */}
-      <View className="mx-5 mt-4 mb-5 bg-muted rounded-xl px-4 py-3 border-continuous flex-row items-center gap-3">
+      <View className="mx-5 mt-4 mb-5 bg-muted rounded-2xl px-4 py-3 border-continuous flex-row items-center gap-3">
         <Icon
           icon={configured ? CircleCheck : CircleAlert}
           className={configured ? "w-5 h-5 text-green-500" : "w-5 h-5 text-orange-500"}
@@ -44,21 +43,24 @@ export default function SettingsScreen() {
 
       {/* 接口配置 */}
       <SectionHeader label="接口配置" />
-      <ConfigField
-        icon={KeyRound}
-        label="API Key"
-        placeholder="sk-..."
-        configKey="apiKey"
-        secure
-      />
-      <ConfigField
-        icon={Link2}
-        label="API 地址"
-        placeholder={DEFAULT_API_CONFIG.baseURL}
-        configKey="baseURL"
-        keyboardType="url"
-      />
-      <View className="px-5 pb-2 pt-1">
+      <Card>
+        <ConfigField
+          icon={KeyRound}
+          label="API Key"
+          placeholder="sk-..."
+          configKey="apiKey"
+          secure
+        />
+        <RowDivider />
+        <ConfigField
+          icon={Link2}
+          label="API 地址"
+          placeholder={DEFAULT_API_CONFIG.baseURL}
+          configKey="baseURL"
+          keyboardType="url"
+        />
+      </Card>
+      <View className="px-5 pb-2 pt-2">
         <Text className="text-[13px] text-muted-foreground leading-5">
           默认是 DeepSeek，也可以填任何 OpenAI 兼容接口（地址到 /v1 这一级）。
           Key 只保存在本机钥匙串，不上传到任何地方。
@@ -67,54 +69,68 @@ export default function SettingsScreen() {
           className="mt-2 active:opacity-60"
           onPress={() => Linking.openURL("https://platform.deepseek.com/api_keys")}
         >
-          <Text className="text-[15px] text-blue-500">获取 DeepSeek API Key →</Text>
+          <Text className="text-[15px] text-brand">获取 DeepSeek API Key →</Text>
         </Pressable>
       </View>
-
-      <SectionDivider />
 
       {/* 模型 */}
       <SectionHeader label="模型" />
-      {MODEL_PRESETS.map((preset) => (
-        <Pressable
-          key={preset.id}
-          className="flex-row items-center px-5 py-3.5 gap-4 active:bg-muted"
-          onPress={() => setApiConfig({ model: preset.id })}
-        >
-          <Icon icon={Sparkles} className="w-5 h-5 text-foreground" />
-          <View className="flex-1">
-            <Text className="text-[17px] text-foreground">{preset.label}</Text>
-            <Text className="text-[13px] text-muted-foreground">{preset.subtitle}</Text>
+      <Card>
+        {MODEL_PRESETS.map((preset, i) => (
+          <View key={preset.id}>
+            {i > 0 && <RowDivider />}
+            <Pressable
+              className="flex-row items-center px-4 py-3.5 gap-3 active:bg-muted"
+              onPress={() => setApiConfig({ model: preset.id })}
+            >
+              <Icon icon={Sparkles} className="w-5 h-5 text-foreground" />
+              <View className="flex-1">
+                <Text className="text-[16px] text-foreground">{preset.label}</Text>
+                <Text className="text-[12px] text-muted-foreground">
+                  {preset.subtitle}
+                </Text>
+              </View>
+              {config.model === preset.id && (
+                <Icon icon={Check} className="w-5 h-5 text-brand" />
+              )}
+            </Pressable>
           </View>
-          {config.model === preset.id && (
-            <Icon icon={Check} className="w-5 h-5 text-blue-500" />
-          )}
-        </Pressable>
-      ))}
-      <CustomModelField currentModel={config.model} />
-
-      <SectionDivider />
+        ))}
+        <RowDivider />
+        <CustomModelField currentModel={config.model} />
+      </Card>
 
       {/* 关于 */}
-      <View className="px-5 py-4">
-        <Text className="text-[13px] text-muted-foreground leading-5">
-          琉璃 GlassChat · 基于 Expo chat-template 改造 · iOS 26 液态玻璃
-        </Text>
-      </View>
+      <SectionHeader label="关于" />
+      <Card>
+        <View className="px-4 py-3.5">
+          <Text className="text-[13px] text-muted-foreground leading-5">
+            琉璃 GlassChat · 基于 Expo chat-template 改造 · iOS 26 液态玻璃
+          </Text>
+        </View>
+      </Card>
     </ScrollView>
   );
 }
 
 function SectionHeader({ label }: { label: string }) {
   return (
-    <Text className="px-5 pt-4 pb-2 text-[13px] uppercase text-muted-foreground">
+    <Text className="px-6 pt-5 pb-2 text-[13px] text-muted-foreground">
       {label}
     </Text>
   );
 }
 
-function SectionDivider() {
-  return <View className="h-px bg-border mx-5" />;
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <View className="mx-5 rounded-2xl bg-card border-continuous overflow-hidden">
+      {children}
+    </View>
+  );
+}
+
+function RowDivider() {
+  return <View className="h-px bg-border ml-14" />;
 }
 
 function ConfigField({
@@ -141,10 +157,10 @@ function ConfigField({
   }, [config, configKey]);
 
   return (
-    <View className="flex-row items-center px-5 py-3 gap-4">
+    <View className="flex-row items-center px-4 py-3 gap-3">
       <Icon icon={icon} className="w-5 h-5 text-foreground" />
       <View className="flex-1">
-        <Text className="text-[13px] text-muted-foreground">{label}</Text>
+        <Text className="text-[12px] text-muted-foreground">{label}</Text>
         <TextInput
           className="text-[16px] text-foreground py-1"
           value={draft}
@@ -167,24 +183,21 @@ function CustomModelField({ currentModel }: { currentModel: string }) {
   const [draft, setDraft] = useState(isPreset ? "" : currentModel);
 
   return (
-    <View className="flex-row items-center px-5 py-3 gap-4">
-      <Icon icon={ChevronRight} className="w-5 h-5 text-muted-foreground" />
-      <View className="flex-1">
-        <Text className="text-[13px] text-muted-foreground">自定义模型名</Text>
-        <TextInput
-          className="text-[16px] text-foreground py-1"
-          value={draft}
-          onChangeText={setDraft}
-          onBlur={() => {
-            const value = draft.trim();
-            if (value) setApiConfig({ model: value });
-          }}
-          placeholder="例如 gpt-4o-mini"
-          placeholderTextColor="#888"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-      </View>
+    <View className="px-4 py-3">
+      <Text className="text-[12px] text-muted-foreground">自定义模型名</Text>
+      <TextInput
+        className="text-[16px] text-foreground py-1"
+        value={draft}
+        onChangeText={setDraft}
+        onBlur={() => {
+          const value = draft.trim();
+          if (value) setApiConfig({ model: value });
+        }}
+        placeholder="例如 gpt-4o-mini"
+        placeholderTextColor="#888"
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
     </View>
   );
 }

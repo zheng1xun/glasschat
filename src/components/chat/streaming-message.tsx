@@ -9,7 +9,7 @@ export function StreamingMessage({ store }: { store: StreamingStore }) {
       className={
         process.env.EXPO_OS === "web"
           ? "text-[13px] leading-[1.65] text-foreground"
-          : "text-base leading-[22px] text-foreground"
+          : "text-base leading-[26px] text-foreground"
       }
     >
       {text || "..."}

@@ -11,10 +11,11 @@
 :root {
   
   @variant light {
-    --app-background: oklch(0.985 0 0);
+    --app-background: #ffffff;
     --app-foreground: oklch(0.12 0 0);
     --app-card: oklch(1 0 0);
-    --app-user-bubble: oklch(0.95 0.003 100);
+    --app-user-bubble: #e6f0ff;
+    --app-brand: #4b7bff;
     --app-muted: oklch(0.955 0 0);
     --app-muted-foreground: oklch(0.55 0 0);
     --app-border: oklch(0.88 0 0);
@@ -28,10 +29,11 @@
   }
 
   @variant dark {
-    --app-background: oklch(0.195 0 0);
+    --app-background: #121212;
     --app-foreground: oklch(0.94 0 0);
     --app-card: oklch(0.225 0 0);
-    --app-user-bubble: oklch(0.14 0 0);
+    --app-user-bubble: #26334d;
+    --app-brand: #4b7bff;
     --app-muted: oklch(0.27 0 0);
     --app-muted-foreground: oklch(0.6 0 0);
     --app-border: oklch(0.32 0 0);
@@ -51,6 +53,7 @@
   --color-foreground: var(--app-foreground);
   --color-card: var(--app-card);
   --color-user-bubble: var(--app-user-bubble);
+  --color-brand: var(--app-brand);
   --color-muted: var(--app-muted);
   --color-muted-foreground: var(--app-muted-foreground);
   --color-border: var(--app-border);

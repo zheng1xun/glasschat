@@ -14,6 +14,8 @@ import {
   createStreamingStore,
   type ChatMessage,
 } from "@/components/chat";
+import { ComposerToggles } from "@/components/chat/composer-toggles";
+import { ReasoningCard } from "@/components/chat/reasoning-card";
 import { Icon } from "@/components/icon";
 import { MainHeader } from "@/components/main-header";
 import { OpenAICompatTransport } from "@/lib/openai-compat-transport";
@@ -59,11 +61,26 @@ function getTextFromParts(
     .join("");
 }
 
+/** Extract reasoning content from a UIMessage's parts array. */
+function getReasoningFromParts(
+  parts: Array<{ type: string; text?: string }>,
+): string {
+  return parts
+    .filter((p) => p.type === "reasoning" && p.text)
+    .map((p) => p.text)
+    .join("");
+}
+
 function useAIChat() {
   const [input, setInput] = useState("");
   const streamingStore = useMemo(() => createStreamingStore(), []);
+  const reasoningStore = useMemo(() => createStreamingStore(), []);
   const transport = useMemo(() => new OpenAICompatTransport(), []);
   const prevStreamingTextRef = useRef("");
+  const prevReasoningTextRef = useRef("");
+  // 每条消息的思考开始时间和用时（用于「已思考（用时 X 秒）」）
+  const reasoningStartRef = useRef(new Map<string, number>());
+  const reasoningDurationRef = useRef(new Map<string, number>());
 
   const {
     messages: uiMessages,
@@ -76,38 +93,76 @@ function useAIChat() {
 
   // Map UIMessages to ChatMessages
   const messages: ChatMessage[] = useMemo(() => {
-    return uiMessages.map((m) => ({
-      id: m.id,
-      role: m.role as "user" | "assistant",
-      content:
-        isStreaming &&
-        m.role === "assistant" &&
-        m === uiMessages[uiMessages.length - 1]
-          ? "" // Signal streaming — content comes from store
-          : getTextFromParts(m.parts as Array<{ type: string; text?: string }>),
-    }));
+    return uiMessages.map((m) => {
+      const parts = m.parts as Array<{ type: string; text?: string }>;
+      const reasoning = getReasoningFromParts(parts);
+      return {
+        id: m.id,
+        role: m.role as "user" | "assistant",
+        content:
+          isStreaming &&
+          m.role === "assistant" &&
+          m === uiMessages[uiMessages.length - 1]
+            ? "" // Signal streaming — content comes from store
+            : getTextFromParts(parts),
+        reasoning: reasoning || undefined,
+        reasoningDuration: reasoningDurationRef.current.get(m.id),
+      };
+    });
   }, [uiMessages, isStreaming]);
 
-  // Sync streaming text to the store
+  // Sync streaming text + reasoning to the stores
   useEffect(() => {
     if (!isStreaming) {
       if (prevStreamingTextRef.current) {
         prevStreamingTextRef.current = "";
         streamingStore.set("");
       }
+      if (prevReasoningTextRef.current) {
+        prevReasoningTextRef.current = "";
+        reasoningStore.set("");
+      }
+      // 流结束：补上思考用时
+      const lastMessage = uiMessages[uiMessages.length - 1];
+      if (lastMessage) {
+        const start = reasoningStartRef.current.get(lastMessage.id);
+        if (start != null && !reasoningDurationRef.current.has(lastMessage.id)) {
+          reasoningDurationRef.current.set(
+            lastMessage.id,
+            Math.max(1, Math.round((Date.now() - start) / 1000)),
+          );
+        }
+      }
       return;
     }
     const lastMessage = uiMessages[uiMessages.length - 1];
     if (lastMessage?.role === "assistant") {
-      const text = getTextFromParts(
-        lastMessage.parts as Array<{ type: string; text?: string }>,
-      );
+      const parts = lastMessage.parts as Array<{ type: string; text?: string }>;
+      const text = getTextFromParts(parts);
       if (text !== prevStreamingTextRef.current) {
         prevStreamingTextRef.current = text;
         streamingStore.set(text);
       }
+      const reasoning = getReasoningFromParts(parts);
+      if (reasoning && !reasoningStartRef.current.has(lastMessage.id)) {
+        reasoningStartRef.current.set(lastMessage.id, Date.now());
+      }
+      // 思考结束（正文开始出现）时记录用时
+      if (reasoning && text && !reasoningDurationRef.current.has(lastMessage.id)) {
+        const start = reasoningStartRef.current.get(lastMessage.id);
+        if (start != null) {
+          reasoningDurationRef.current.set(
+            lastMessage.id,
+            Math.max(1, Math.round((Date.now() - start) / 1000)),
+          );
+        }
+      }
+      if (reasoning !== prevReasoningTextRef.current) {
+        prevReasoningTextRef.current = reasoning;
+        reasoningStore.set(reasoning);
+      }
     }
-  }, [uiMessages, isStreaming, streamingStore]);
+  }, [uiMessages, isStreaming, streamingStore, reasoningStore]);
 
   const onSend = useCallback(() => {
     if (!input.trim() || isStreaming) return;
@@ -123,6 +178,7 @@ function useAIChat() {
     isGenerating: isStreaming,
     onSend,
     streamingStore,
+    reasoningStore,
     error: error ?? null,
   };
 }
@@ -132,6 +188,7 @@ function useMockChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const streamingStore = useMemo(() => createStreamingStore(), []);
+  const reasoningStore = useMemo(() => createStreamingStore(), []);
   const streamingRef = useRef("");
   const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mockIndexRef = useRef(0);
@@ -208,13 +265,14 @@ function useMockChat() {
     isGenerating,
     onSend: handleSend,
     streamingStore,
+    reasoningStore,
     error: null,
   };
 }
 
 export default function ChatScreen() {
   const chat = USE_MOCK ? useMockChat() : useAIChat();
-  const { messages, isGenerating, streamingStore } = chat;
+  const { messages, isGenerating, streamingStore, reasoningStore } = chat;
 
   const renderMessage = useCallback(
     ({ item }: { item: ChatMessage }) => {
@@ -225,6 +283,12 @@ export default function ChatScreen() {
       const isStreaming = isGenerating && item.content === "";
       return (
         <Message from="assistant">
+          <ReasoningCard
+            streaming={isStreaming}
+            text={item.reasoning}
+            store={reasoningStore}
+            duration={item.reasoningDuration}
+          />
           {isStreaming ? (
             <StreamingMessage store={streamingStore} />
           ) : (
@@ -233,7 +297,7 @@ export default function ChatScreen() {
         </Message>
       );
     },
-    [isGenerating, streamingStore],
+    [isGenerating, streamingStore, reasoningStore],
   );
 
   return (
@@ -256,7 +320,7 @@ export default function ChatScreen() {
               </Text>
             </View>
           )}
-          <PromptInput>
+          <PromptInput header={<ComposerToggles />}>
             <Link href="/attachments" asChild>
               <PromptInputAction>
                 <Icon icon={Plus} className="w-5 h-5 text-muted-foreground" />

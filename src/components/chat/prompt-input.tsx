@@ -21,7 +21,13 @@ const AnimatedGlassContainer = Animated.createAnimatedComponent(GlassContainer);
  * the `<Conversation />` using the shared conversation context. Children are
  * laid out in a horizontal row inside a glass container.
  */
-export function PromptInput({ children }: { children: ReactNode }) {
+export function PromptInput({
+  children,
+  header,
+}: {
+  children: ReactNode;
+  header?: ReactNode;
+}) {
   const { promptInputStyle, onPromptInputLayout } = useConversationContext();
   const { error } = useChatContext();
 
@@ -31,6 +37,7 @@ export function PromptInput({ children }: { children: ReactNode }) {
       style={[{ position: "absolute", left: 0, right: 0 }, promptInputStyle]}
     >
       {error && <PromptInputError message={error.message} />}
+      {header}
       <AnimatedGlassContainer
         style={{
           flex: 1,

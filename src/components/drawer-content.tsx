@@ -8,7 +8,13 @@ import { cn } from "@/utils/tailwind";
 import type { Href } from "expo-router";
 import { Plus } from "lucide-react-native";
 
-import React, { createContext, use, useCallback, useState } from "react";
+import React, {
+  createContext,
+  use,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 type DrawerContextValue = {
@@ -98,6 +104,23 @@ export function DrawerContent({
   onNavigate: (path: Href) => void;
   onOpenModal: (path: Href) => void;
 }) {
+  // 按时间分组：今天 / 昨天 / 过去 7 天 / 更早
+  const groups = useMemo(() => {
+    const buckets = [
+      { label: "今天", items: [] as typeof MOCK_CHATS },
+      { label: "昨天", items: [] as typeof MOCK_CHATS },
+      { label: "过去 7 天", items: [] as typeof MOCK_CHATS },
+      { label: "更早", items: [] as typeof MOCK_CHATS },
+    ];
+    for (const chat of MOCK_CHATS) {
+      if (chat.daysAgo <= 0) buckets[0].items.push(chat);
+      else if (chat.daysAgo === 1) buckets[1].items.push(chat);
+      else if (chat.daysAgo <= 7) buckets[2].items.push(chat);
+      else buckets[3].items.push(chat);
+    }
+    return buckets.filter((b) => b.items.length > 0);
+  }, []);
+
   return (
     <SafeAreaView
       // NOTE: Some issue with uniwind that prevents updates for this component.
@@ -127,17 +150,21 @@ export function DrawerContent({
           }}
         />
 
-        {/* Recents */}
-        <Text className="text-[13px] font-semibold text-muted-foreground px-6 pt-5 pb-1.5">
-          最近对话
-        </Text>
-        {MOCK_CHATS.map((chat) => (
-          <DrawerChatItem
-            key={chat.id}
-            title={chat.title}
-            active={chat.id === "1"}
-            onPress={() => onNavigate("/")}
-          />
+        {/* 最近对话（按时间分组） */}
+        {groups.map((group) => (
+          <View key={group.label}>
+            <Text className="text-[13px] font-semibold text-muted-foreground px-6 pt-5 pb-1.5">
+              {group.label}
+            </Text>
+            {group.items.map((chat) => (
+              <DrawerChatItem
+                key={chat.id}
+                title={chat.title}
+                active={chat.id === "1"}
+                onPress={() => onNavigate("/")}
+              />
+            ))}
+          </View>
         ))}
       </ScrollView>
 

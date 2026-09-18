@@ -9,6 +9,8 @@ export type ChatContextValue = {
   isGenerating: boolean;
   onSend: () => void;
   streamingStore: StreamingStore;
+  /** 流式期间的思考过程文本（与 streamingStore 同样的 pub/sub） */
+  reasoningStore: StreamingStore;
   error?: Error | null;
 };
 
