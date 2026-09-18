@@ -1,6 +1,7 @@
 import { Icon } from "@/components/icon";
 import {
   getApiConfig,
+  isSearchConfigured,
   setApiConfig,
   subscribeApiConfig,
 } from "@/lib/api-config";
@@ -8,37 +9,66 @@ import type { LucideIcon } from "lucide-react-native";
 import { Brain, Globe } from "lucide-react-native";
 import { useSyncExternalStore } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 
 /**
  * 输入框上方的快捷开关（DeepSeek 风格胶囊按钮）。
- * 「深度思考」真实生效：在 deepseek-chat / deepseek-reasoner 之间切换模型；
- * 「智能搜索」DeepSeek 官方 API 暂未开放，先预留位置。
+ * 「深度思考」：DeepSeek 下切换 chat / reasoner 模型，真实生效；
+ * 「智能搜索」：开启后发问前先调搜索引擎 API（Tavily/博查/SearXNG/Bing，
+ * 在设置页配置），结果注入上下文并自动生成 [1][2] 引用角标。
  */
 export function ComposerToggles() {
   const config = useSyncExternalStore(subscribeApiConfig, getApiConfig);
+  const router = useRouter();
   const reasoningOn = config.model === "deepseek-reasoner";
+  const searchOn = config.webSearchEnabled && isSearchConfigured();
+  const isDeepSeek = config.providerId === "deepseek";
 
   return (
     <View className="flex-row gap-2 px-1 pb-2">
-      <TogglePill
-        icon={Brain}
-        label="深度思考"
-        active={reasoningOn}
-        onPress={() => {
-          setApiConfig({
-            model: reasoningOn ? "deepseek-chat" : "deepseek-reasoner",
-          });
-        }}
-      />
+      {isDeepSeek && (
+        <TogglePill
+          icon={Brain}
+          label="深度思考"
+          active={reasoningOn}
+          onPress={() => {
+            setApiConfig({
+              model: reasoningOn ? "deepseek-chat" : "deepseek-reasoner",
+            });
+          }}
+        />
+      )}
       <TogglePill
         icon={Globe}
         label="智能搜索"
-        active={false}
+        active={searchOn}
         onPress={() => {
-          Alert.alert(
-            "暂不支持",
-            "DeepSeek 官方 API 暂未开放联网搜索能力，这里先为你预留了位置；以后接入支持搜索的接口即可生效。",
-          );
+          if (searchOn) {
+            setApiConfig({ webSearchEnabled: false });
+            return;
+          }
+          if (config.searchProvider === "none") {
+            Alert.alert(
+              "先配置搜索引擎",
+              "到 设置 → 联网搜索 里选一个搜索引擎并填入 Key（推荐 Tavily，免费额度足够自用）。",
+              [
+                { text: "取消", style: "cancel" },
+                {
+                  text: "去设置",
+                  onPress: () => router.navigate("/(settings)/settings"),
+                },
+              ],
+            );
+            return;
+          }
+          if (!isSearchConfigured()) {
+            Alert.alert(
+              "搜索引擎缺少凭据",
+              "到 设置 → 联网搜索 里补上 API Key 或实例地址。",
+            );
+            return;
+          }
+          setApiConfig({ webSearchEnabled: true });
         }}
       />
     </View>

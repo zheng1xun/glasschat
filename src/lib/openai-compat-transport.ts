@@ -7,6 +7,7 @@ import type {
 import { fetch as expoFetch } from "expo/fetch";
 
 import { getApiConfig } from "./api-config";
+import { searchWeb } from "./web-search";
 
 type SendMessagesOptions = {
   trigger: "submit-message" | "regenerate-message";
@@ -33,6 +34,33 @@ export class OpenAICompatTransport implements ChatTransport<UIMessage> {
     const url =
       config.baseURL.trim().replace(/\/+$/, "") + "/chat/completions";
 
+    // 联网搜索：发消息前先搜一轮，把结果注入上下文（Cherry Studio 同款架构）
+    const openaiMessages = toOpenAIMessages(options.messages);
+    if (
+      config.webSearchEnabled &&
+      config.searchProvider !== "none"
+    ) {
+      const lastUser = [...openaiMessages].reverse().find((m) => m.role === "user");
+      if (lastUser) {
+        const results = await searchWeb(
+          lastUser.content,
+          config,
+          options.abortSignal ?? undefined,
+        );
+        if (results.length > 0) {
+          const context = results
+            .map((r, i) => `[${i + 1}] ${r.title}\n${r.snippet}\n来源: ${r.url}`)
+            .join("\n\n");
+          openaiMessages.push({
+            role: "system",
+            content:
+              "以下是联网搜索到的最新参考资料。回答时请优先参考它们，并在引用处用 [1]、[2] 这样的编号标注来源：\n\n" +
+              context,
+          });
+        }
+      }
+    }
+
     const response = await expoFetch(url, {
       method: "POST",
       headers: {
@@ -42,7 +70,7 @@ export class OpenAICompatTransport implements ChatTransport<UIMessage> {
       body: JSON.stringify({
         model: config.model,
         stream: true,
-        messages: toOpenAIMessages(options.messages),
+        messages: openaiMessages,
       }),
       signal: options.abortSignal ?? null,
     });

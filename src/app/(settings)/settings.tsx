@@ -1,7 +1,7 @@
 import { Icon } from "@/components/icon";
 import {
   DEFAULT_API_CONFIG,
-  MODEL_PRESETS,
+  PROVIDER_PRESETS,
   getApiConfig,
   isApiConfigured,
   setApiConfig,
@@ -13,6 +13,7 @@ import {
   Check,
   CircleAlert,
   CircleCheck,
+  Globe,
   KeyRound,
   Link2,
   Sparkles,
@@ -20,9 +21,22 @@ import {
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
+const SEARCH_PROVIDERS = [
+  { id: "none", label: "不使用", hint: "" },
+  { id: "tavily", label: "Tavily", hint: "推荐，免费额度足够自用" },
+  { id: "bocha", label: "博查", hint: "国内可直连" },
+  { id: "searxng", label: "SearXNG", hint: "自建实例，填地址即可" },
+  { id: "bing", label: "Bing", hint: "需要 Azure 订阅 Key" },
+] as const;
+
 export default function SettingsScreen() {
   const config = useSyncExternalStore(subscribeApiConfig, getApiConfig);
   const configured = isApiConfigured();
+
+  const provider =
+    PROVIDER_PRESETS.find((p) => p.id === config.providerId) ??
+    PROVIDER_PRESETS[0];
+  const modelPresets = provider.models;
 
   return (
     <ScrollView
@@ -37,9 +51,52 @@ export default function SettingsScreen() {
           className={configured ? "w-5 h-5 text-green-500" : "w-5 h-5 text-orange-500"}
         />
         <Text className="text-[15px] text-foreground flex-1">
-          {configured ? `已配置 · ${config.model}` : "未配置 API Key，先填下面的接口信息"}
+          {configured
+            ? `已配置 · ${provider.label} · ${config.model}`
+            : "未配置 API Key，先填下面的接口信息"}
         </Text>
       </View>
+
+      {/* 服务商 */}
+      <SectionHeader label="服务商" />
+      <Card>
+        <View className="flex-row flex-wrap gap-2 px-4 py-3.5">
+          {PROVIDER_PRESETS.map((preset) => {
+            const active = config.providerId === preset.id;
+            return (
+              <Pressable
+                key={preset.id}
+                onPress={() =>
+                  setApiConfig(
+                    preset.baseURL
+                      ? { providerId: preset.id, baseURL: preset.baseURL }
+                      : { providerId: preset.id },
+                  )
+                }
+                className="rounded-full px-3.5 py-2 border-continuous active:opacity-70"
+                style={
+                  active
+                    ? {
+                        backgroundColor: "rgba(75,123,255,0.12)",
+                        borderColor: "#4B7BFF",
+                      }
+                    : undefined
+                }
+              >
+                <Text
+                  className={
+                    active
+                      ? "text-[14px] text-brand"
+                      : "text-[14px] text-foreground"
+                  }
+                >
+                  {preset.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Card>
 
       {/* 接口配置 */}
       <SectionHeader label="接口配置" />
@@ -60,10 +117,10 @@ export default function SettingsScreen() {
           keyboardType="url"
         />
       </Card>
-      <View className="px-5 pb-2 pt-2">
+      <View className="px-6 pb-2 pt-2">
         <Text className="text-[13px] text-muted-foreground leading-5">
-          默认是 DeepSeek，也可以填任何 OpenAI 兼容接口（地址到 /v1 这一级）。
-          Key 只保存在本机钥匙串，不上传到任何地方。
+          以上服务商都兼容 OpenAI 协议，选预设会自动填好地址，贴入 Key
+          即可；自定义服务商选「自定义」再手动改地址。Key 只保存在本机钥匙串。
         </Text>
         <Pressable
           className="mt-2 active:opacity-60"
@@ -76,35 +133,102 @@ export default function SettingsScreen() {
       {/* 模型 */}
       <SectionHeader label="模型" />
       <Card>
-        {MODEL_PRESETS.map((preset, i) => (
-          <View key={preset.id}>
+        {modelPresets.map((modelId, i) => (
+          <View key={modelId}>
             {i > 0 && <RowDivider />}
             <Pressable
               className="flex-row items-center px-4 py-3.5 gap-3 active:bg-muted"
-              onPress={() => setApiConfig({ model: preset.id })}
+              onPress={() => setApiConfig({ model: modelId })}
             >
               <Icon icon={Sparkles} className="w-5 h-5 text-foreground" />
-              <View className="flex-1">
-                <Text className="text-[16px] text-foreground">{preset.label}</Text>
-                <Text className="text-[12px] text-muted-foreground">
-                  {preset.subtitle}
-                </Text>
-              </View>
-              {config.model === preset.id && (
+              <Text className="flex-1 text-[16px] text-foreground">
+                {modelId}
+              </Text>
+              {config.model === modelId && (
                 <Icon icon={Check} className="w-5 h-5 text-brand" />
               )}
             </Pressable>
           </View>
         ))}
-        <RowDivider />
+        {modelPresets.length > 0 && <RowDivider />}
         <CustomModelField currentModel={config.model} />
       </Card>
+
+      {/* 联网搜索 */}
+      <SectionHeader label="联网搜索" />
+      <Card>
+        <View className="flex-row flex-wrap gap-2 px-4 py-3.5">
+          {SEARCH_PROVIDERS.map((item) => {
+            const active = config.searchProvider === item.id;
+            return (
+              <Pressable
+                key={item.id}
+                onPress={() =>
+                  setApiConfig({
+                    searchProvider: item.id,
+                    webSearchEnabled:
+                      item.id === "none" ? false : config.webSearchEnabled,
+                  })
+                }
+                className="rounded-full px-3.5 py-2 border-continuous active:opacity-70"
+                style={
+                  active
+                    ? {
+                        backgroundColor: "rgba(75,123,255,0.12)",
+                        borderColor: "#4B7BFF",
+                      }
+                    : undefined
+                }
+              >
+                <Text
+                  className={
+                    active
+                      ? "text-[14px] text-brand"
+                      : "text-[14px] text-foreground"
+                  }
+                >
+                  {item.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        {config.searchProvider !== "none" && (
+          <>
+            <RowDivider />
+            {config.searchProvider === "searxng" ? (
+              <ConfigField
+                icon={Link2}
+                label="SearXNG 实例地址"
+                placeholder="https://searx.example.com"
+                configKey="searchEndpoint"
+                keyboardType="url"
+              />
+            ) : (
+              <ConfigField
+                icon={KeyRound}
+                label="搜索引擎 API Key"
+                placeholder="tvly-..."
+                configKey="searchApiKey"
+                secure
+              />
+            )}
+          </>
+        )}
+      </Card>
+      <View className="px-6 pb-2 pt-2">
+        <Text className="text-[13px] text-muted-foreground leading-5">
+          配置后到输入框上方打开「智能搜索」，发问前会先联网检索，回答自动带
+          [1][2] 来源角标。Tavily 申请：tavily.com（每月 1000 次免费）。
+        </Text>
+      </View>
 
       {/* 关于 */}
       <SectionHeader label="关于" />
       <Card>
-        <View className="px-4 py-3.5">
-          <Text className="text-[13px] text-muted-foreground leading-5">
+        <View className="px-4 py-3.5 flex-row items-center gap-3">
+          <Icon icon={Globe} className="w-5 h-5 text-muted-foreground" />
+          <Text className="text-[13px] text-muted-foreground leading-5 flex-1">
             琉璃 GlassChat · 基于 Expo chat-template 改造 · iOS 26 液态玻璃
           </Text>
         </View>
@@ -149,11 +273,11 @@ function ConfigField({
   keyboardType?: "default" | "url";
 }) {
   const config = useSyncExternalStore(subscribeApiConfig, getApiConfig);
-  const [draft, setDraft] = useState(config[configKey]);
+  const [draft, setDraft] = useState(String(config[configKey] ?? ""));
 
   // 外部（如首次水合完成）更新时同步到输入框
   useEffect(() => {
-    setDraft(config[configKey]);
+    setDraft(String(config[configKey] ?? ""));
   }, [config, configKey]);
 
   return (
@@ -165,7 +289,9 @@ function ConfigField({
           className="text-[16px] text-foreground py-1"
           value={draft}
           onChangeText={setDraft}
-          onBlur={() => setApiConfig({ [configKey]: draft.trim() })}
+          onBlur={() =>
+            setApiConfig({ [configKey]: draft.trim() } as Partial<ApiConfig>)
+          }
           placeholder={placeholder}
           placeholderTextColor="#888"
           secureTextEntry={secure}
@@ -179,7 +305,9 @@ function ConfigField({
 }
 
 function CustomModelField({ currentModel }: { currentModel: string }) {
-  const isPreset = MODEL_PRESETS.some((p) => p.id === currentModel);
+  const isPreset = PROVIDER_PRESETS.some((p) =>
+    (p.models as readonly string[]).includes(currentModel),
+  );
   const [draft, setDraft] = useState(isPreset ? "" : currentModel);
 
   return (
